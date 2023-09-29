@@ -1,9 +1,8 @@
 # lib/department.py
-from __init__ import CURSOR, CONN
+from __init__ import CONN, CURSOR
 
 
 class Department:
-
     # Dictionary of objects saved to the database.
     all = {}
 
@@ -15,9 +14,31 @@ class Department:
     def __repr__(self):
         return f"<Department {self.id}: {self.name}, {self.location}>"
 
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        if isinstance(name, str) and len(name):
+            self._name = name
+        else:
+            raise ValueError("Name must be a non-empty string")
+
+    @property
+    def location(self):
+        return self._location
+
+    @location.setter
+    def location(self, location):
+        if isinstance(location, str) and len(location):
+            self._location = location
+        else:
+            raise ValueError("Location must be a non-empty string")
+
     @classmethod
     def create_table(cls):
-        """ Create a new table to persist the attributes of Department instances """
+        """Create a new table to persist the attributes of Department instances"""
         sql = """
             CREATE TABLE IF NOT EXISTS departments (
             id INTEGER PRIMARY KEY,
@@ -29,7 +50,7 @@ class Department:
 
     @classmethod
     def drop_table(cls):
-        """ Drop the table that persists Department instances """
+        """Drop the table that persists Department instances"""
         sql = """
             DROP TABLE IF EXISTS departments;
         """
@@ -37,7 +58,7 @@ class Department:
         CONN.commit()
 
     def save(self):
-        """ Insert a new row with the name and location values of the current Department instance.
+        """Insert a new row with the name and location values of the current Department instance.
         Update object id attribute using the primary key value of new row.
         Save the object in local dictionary using table row's PK as dictionary key"""
         sql = """
@@ -53,7 +74,7 @@ class Department:
 
     @classmethod
     def create(cls, name, location):
-        """ Initialize a new Department instance and save the object to the database """
+        """Initialize a new Department instance and save the object to the database"""
         department = cls(name, location)
         department.save()
         return department
@@ -142,13 +163,15 @@ class Department:
     def employees(self):
         """Return list of employees associated with current department"""
         from employee import Employee
+
         sql = """
             SELECT * FROM employees
             WHERE department_id = ?
         """
-        CURSOR.execute(sql, (self.id,),)
+        CURSOR.execute(
+            sql,
+            (self.id,),
+        )
 
         rows = CURSOR.fetchall()
-        return [
-            Employee.instance_from_db(row) for row in rows
-        ]
+        return [Employee.instance_from_db(row) for row in rows]

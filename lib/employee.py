@@ -1,10 +1,9 @@
 # lib/employee.py
-from __init__ import CURSOR, CONN
+from __init__ import CONN, CURSOR
 from department import Department
 
 
 class Employee:
-
     # Dictionary of objects saved to the database.
     all = {}
 
@@ -16,13 +15,48 @@ class Employee:
 
     def __repr__(self):
         return (
-            f"<Employee {self.id}: {self.name}, {self.job_title}, " +
-            f"Department ID: {self.department_id}>"
+            f"<Employee {self.id}: {self.name}, {self.job_title}, "
+            + f"Department ID: {self.department_id}>"
         )
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        if isinstance(name, str) and len(name):
+            self._name = name
+        else:
+            raise ValueError("Name must be a non-empty string")
+
+    @property
+    def job_title(self):
+        return self._job_title
+
+    @job_title.setter
+    def job_title(self, job_title):
+        if isinstance(job_title, str) and len(job_title):
+            self._job_title = job_title
+        else:
+            raise ValueError("job_title must be a non-empty string")
+
+    @property
+    def department_id(self):
+        return self._department_id
+
+    @department_id.setter
+    def department_id(self, department_id):
+        if type(department_id) is int and Department.find_by_id(department_id):
+            self._department_id = department_id
+        else:
+            raise ValueError(
+                "department_id must reference a department in the database"
+            )
 
     @classmethod
     def create_table(cls):
-        """ Create a new table to persist the attributes of Employee instances """
+        """Create a new table to persist the attributes of Employee instances"""
         sql = """
             CREATE TABLE IF NOT EXISTS employees (
             id INTEGER PRIMARY KEY,
@@ -36,7 +70,7 @@ class Employee:
 
     @classmethod
     def drop_table(cls):
-        """ Drop the table that persists Employee instances """
+        """Drop the table that persists Employee instances"""
         sql = """
             DROP TABLE IF EXISTS employees;
         """
@@ -44,7 +78,7 @@ class Employee:
         CONN.commit()
 
     def save(self):
-        """ Insert a new row with the name, job title, and department id values of the current Employee object.
+        """Insert a new row with the name, job title, and department id values of the current Employee object.
         Update object id attribute using the primary key value of new row.
         Save the object in local dictionary using table row's PK as dictionary key"""
         sql = """
@@ -65,8 +99,7 @@ class Employee:
             SET name = ?, job_title = ?, department_id = ?
             WHERE id = ?
         """
-        CURSOR.execute(sql, (self.name, self.job_title,
-                             self.department_id, self.id))
+        CURSOR.execute(sql, (self.name, self.job_title, self.department_id, self.id))
         CONN.commit()
 
     def delete(self):
@@ -89,7 +122,7 @@ class Employee:
 
     @classmethod
     def create(cls, name, job_title, department_id):
-        """ Initialize a new Employee instance and save the object to the database """
+        """Initialize a new Employee instance and save the object to the database"""
         employee = cls(name, job_title, department_id)
         employee.save()
         return employee
